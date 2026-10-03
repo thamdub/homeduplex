@@ -1,0 +1,18 @@
+apiVersion: v2
+name: homeduplex
+description: Self-hosted voice server speaking the OpenAI Realtime protocol, built from your own speech-to-text, language model and text-to-speech.
+type: application
+# Both are set from the release tag when the chart is published; these are for local use.
+version: 0.0.0
+appVersion: "0.0.0"
+home: https://github.com/thamdub/homeduplex
+sources:
+  - https://github.com/thamdub/homeduplex
+keywords:
+  - voice
+  - realtime
+  - home-assistant
+  - wyoming
+  - ollama
+annotations:
+  artifacthub.io/license: Apache-2.0

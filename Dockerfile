@@ -11,14 +11,16 @@ COPY src ./src
 RUN uv sync --frozen --no-dev --no-editable
 
 FROM python:3.12-slim
-RUN useradd --system --no-create-home homeduplex
+# A fixed numeric UID lets Kubernetes enforce runAsNonRoot.
+RUN useradd --system --no-create-home --uid 10001 homeduplex
 COPY --from=build /app/.venv /app/.venv
 COPY --from=build /app/LICENSE /app/NOTICE /app/THIRD_PARTY_NOTICES.md /usr/share/doc/homeduplex/
 ENV PATH=/app/.venv/bin:$PATH \
     HOMEDUPLEX_CONFIG=/config/homeduplex.yaml \
     HOMEDUPLEX_SERVER__HOST=0.0.0.0 \
-    PYTHONUNBUFFERED=1
-USER homeduplex
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+USER 10001
 EXPOSE 8770
 # Assumes the default port; change it here too if server.port is changed.
 HEALTHCHECK --interval=30s --timeout=5s \

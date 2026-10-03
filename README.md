@@ -76,8 +76,10 @@ the other users, or the server may reload the model on every switch.
 
 ## Running it as a service
 
-- **Docker:** `docker build -t homeduplex .`, then
-  `docker run -p 8770:8770 -v ./homeduplex.yaml:/config/homeduplex.yaml:ro homeduplex`.
+- **Docker:** `docker run -p 8770:8770 -v ./homeduplex.yaml:/config/homeduplex.yaml:ro ghcr.io/thamdub/homeduplex`
+  (or build it: `docker build -t homeduplex .`). For prompt dates, set `prompt.timezone`: the image runs in UTC.
+- **Kubernetes:** `helm install homeduplex oci://ghcr.io/thamdub/charts/homeduplex --version <version> -f values.yaml`;
+  see [`charts/homeduplex`](charts/homeduplex/README.md).
 - **macOS:** a LaunchAgent example is in [`examples/macos/`](examples/macos/).
 - `GET /healthz` answers `ok` for monitoring.
 

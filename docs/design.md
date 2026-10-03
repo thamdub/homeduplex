@@ -164,10 +164,17 @@ utterance's level is logged, which is how to pick the value for a room.
 At the default INFO level, logs carry timings, levels and events, never conversation text. DEBUG adds what was
 heard, what was said, tool calls and client-added items, for diagnosing answers.
 
-## Packaging (first release)
+## Packaging
 
-Python package, Docker image (GitHub Container Registry), macOS LaunchAgent example. A Home Assistant add-on is a
-follow-up.
+- A Docker image on GitHub Container Registry (`ghcr.io/thamdub/homeduplex`, amd64 and arm64), running as a fixed
+  non-root UID with a read-only root filesystem.
+- A generic Helm chart in `charts/homeduplex`, published as an OCI chart next to the image. Settings go in a free-form
+  `config:` value; secrets come from an existing Secret as environment variables. Nothing about any particular
+  cluster or house belongs in it: a deployment's own values live with that deployment.
+- Both are published by `.github/workflows/release.yml` when a `v<version>` tag matching `__version__` is pushed,
+  on GitHub's runners only (no self-hosted runner touches this public repository). CI builds the image and checks
+  the chart on every push.
+- A macOS LaunchAgent example. A Home Assistant add-on is a follow-up.
 
 ## License: Apache-2.0
 

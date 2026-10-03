@@ -1,0 +1,4 @@
+config:
+  stt: {type: wyoming, uri: "tcp://stt.example.lan:10300"}
+  tts: {type: wyoming, uri: "tcp://tts.example.lan:10200"}
+  llm: {type: ollama, url: "http://ollama.example.lan:11434", model: llama3.2:3b}

@@ -1,0 +1,79 @@
+# homeduplex settings, exactly as in a homeduplex.yaml file (see examples/homeduplex.example.yaml in the repository).
+# stt, tts and llm are required. Keep secrets out of here: put them in a Secret and name it in `existingSecret`.
+# server.host and server.port are set by the chart (the container listens on `containerPort`).
+config: {}
+#  stt: {type: wyoming, uri: "tcp://stt.example.lan:10300"}
+#  tts: {type: wyoming, uri: "tcp://tts.example.lan:10200", voice: en_US-lessac-medium}
+#  llm: {type: ollama, url: "http://ollama.example.lan:11434", model: llama3.2:3b}
+
+# A Secret whose keys become environment variables, e.g. HOMEDUPLEX_LLM__API_KEY or HOMEDUPLEX_SERVER__API_KEY.
+existingSecret: ""
+
+# Extra environment variables for the container. The image runs in UTC: for prompt dates, set
+# config.prompt.timezone (e.g. Europe/Paris) rather than TZ.
+extraEnv: []
+#  - name: HOMEDUPLEX_CONVERSATION__MAX_TURNS
+#    value: "8"
+
+logLevel: INFO  # DEBUG logs conversation text
+
+image:
+  repository: ghcr.io/thamdub/homeduplex
+  tag: ""  # defaults to the chart's appVersion
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# One replica: backend slots (stt/tts/llm `slots`) are counted per process, so more replicas multiply the load
+# each backend sees. Conversations are kept in memory; a restart ends the ones in progress.
+replicaCount: 1
+
+containerPort: 8770
+
+service:
+  type: ClusterIP
+  port: 8770
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: homeduplex.example.lan
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: homeduplex-tls
+  #    hosts: [homeduplex.example.lan]
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 96Mi
+  limits:
+    memory: 256Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: [ALL]
+
+# Clients reconnect after a restart, but give conversations in progress time to finish their answer.
+terminationGracePeriodSeconds: 30
+
+podAnnotations: {}
+podLabels: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

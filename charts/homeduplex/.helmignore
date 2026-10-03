@@ -1,0 +1,4 @@
+# Test values for CI, not part of the published chart.
+ci/
+.DS_Store
+*.tgz

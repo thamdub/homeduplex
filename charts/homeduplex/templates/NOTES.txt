@@ -1,0 +1,9 @@
+homeduplex is listening on port {{ .Values.service.port }} of service {{ include "homeduplex.fullname" . }}.
+{{- if .Values.ingress.enabled }}
+Point Realtime clients at: {{ if .Values.ingress.tls }}wss{{ else }}ws{{ end }}://{{ (first .Values.ingress.hosts).host }}/v1/realtime
+{{- else }}
+Point Realtime clients at: ws://<service address>:{{ .Values.service.port }}/v1/realtime
+{{- end }}
+
+Check the settings and backends in the logs:
+  kubectl -n {{ .Release.Namespace }} logs deploy/{{ include "homeduplex.fullname" . }}

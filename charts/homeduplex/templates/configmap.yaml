@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "homeduplex.fullname" . }}
+  labels:
+    {{- include "homeduplex.labels" . | nindent 4 }}
+data:
+  homeduplex.yaml: |
+    {{- include "homeduplex.config" . | nindent 4 }}

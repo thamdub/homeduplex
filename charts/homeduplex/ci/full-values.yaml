@@ -1,0 +1,46 @@
+config:
+  server: {port: 9999, host: 127.0.0.1}  # overridden by the chart
+  stt: {type: openai, url: "http://speech.example.lan:8000/v1", model: whisper}
+  tts: {type: openai, url: "http://speech.example.lan:8000/v1", model: kokoro, voice: af_heart}
+  llm:
+    type: openai
+    url: "http://llm.example.lan:8080/v1"
+    model: my-model
+    slots: 2
+  vad: {min_speech_level: 300}
+  prompt:
+    preamble: |-
+      Answer briefly.
+      Braces such as {this} stay as they are in the preamble.
+    context: "Today is {now:%A, %B %d}. You are in the {area}."
+    timezone: Europe/Paris
+  rooms:
+    office: {area: Office}
+existingSecret: homeduplex-keys
+extraEnv:
+  - name: HOMEDUPLEX_CONVERSATION__MAX_TURNS
+    value: "8"
+logLevel: debug
+service:
+  type: LoadBalancer
+  annotations:
+    example.com/address: 192.0.2.10
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    example.com/websocket: "true"
+  hosts:
+    - host: homeduplex.example.lan
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: homeduplex-tls
+      hosts: [homeduplex.example.lan]
+nodeSelector:
+  kubernetes.io/arch: arm64
+tolerations:
+  - key: example.com/dedicated
+    operator: Exists
+    effect: NoSchedule
