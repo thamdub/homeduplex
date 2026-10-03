@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Runs homeduplex at login and restarts it if it stops (macOS LaunchAgent).
+
+  1. Install:  uv tool install homeduplex   (or point ProgramArguments at a checkout: .venv/bin/homeduplex)
+  2. Replace YOU with your user name, and the paths if yours differ.
+  3. cp lan.example.homeduplex.plist ~/Library/LaunchAgents/
+     launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/lan.example.homeduplex.plist
+  Logs: ~/Library/Logs/homeduplex.log. Stop: launchctl bootout gui/$(id -u)/lan.example.homeduplex
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>lan.example.homeduplex</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/YOU/.local/bin/homeduplex</string>
+    <string>serve</string>
+    <string>--config</string>
+    <string>/Users/YOU/.config/homeduplex/homeduplex.yaml</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/Users/YOU/Library/Logs/homeduplex.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/YOU/Library/Logs/homeduplex.log</string>
+</dict>
+</plist>

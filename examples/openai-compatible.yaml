@@ -1,0 +1,19 @@
+# Everything over OpenAI-compatible HTTP APIs, e.g. speaches for speech and llama.cpp's server for the model.
+
+stt:
+  type: openai
+  url: http://speech.example.lan:8000/v1
+  model: Systran/faster-whisper-small
+
+tts:
+  type: openai
+  url: http://speech.example.lan:8000/v1
+  model: speaches-ai/Kokoro-82M-v1.0-ONNX
+  voice: af_heart
+  sample_rate: 24000
+
+llm:
+  type: openai
+  url: http://llm.example.lan:8080/v1
+  model: qwen3-4b
+  slots: 2                   # llama.cpp started with --parallel 2

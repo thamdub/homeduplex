@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local, never committed
+CLAUDE.md
+CLAUDE.local.md
+docs/lessons-from-prototype.md
+*.local.toml
+*.local.yaml
+.env
+*.log
+recordings/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/

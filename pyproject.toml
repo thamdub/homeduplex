@@ -1,0 +1,67 @@
+[project]
+name = "homeduplex"
+version = "0.0.0"
+description = "Self-hosted voice server for full-duplex conversations at home, speaking the OpenAI Realtime protocol."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.27",
+    "numpy>=1.26",
+    "pydantic>=2.7",
+    "pyyaml>=6",
+    "soxr>=0.4",
+    "tzdata>=2024.1",
+    "websockets>=14",
+    "wyoming>=1.5",
+]
+
+[project.scripts]
+homeduplex = "homeduplex.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "types-pyyaml>=6.0.12.20260906",
+    "aiohttp>=3.10",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/homeduplex"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "ASYNC", "RUF"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "tests"
+
+[[tool.mypy.overrides]]
+module = ["soxr"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+pythonpath = ["tests"]
+addopts = "-m 'not load'"
+markers = ["load: real-time load test, run with `-m load -s`"]
+filterwarnings = [
+    "error",
+    # wyoming imports audioop on 3.12 and falls back to its own copy on 3.13+.
+    "ignore:'audioop' is deprecated:DeprecationWarning",
+]

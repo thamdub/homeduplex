@@ -1,0 +1,36 @@
+# A typical Home Assistant voice stack: Wyoming speech services and Ollama, two rooms.
+
+stt:
+  type: wyoming
+  uri: tcp://homeassistant.example.lan:10300   # e.g. wyoming-faster-whisper
+  language: en
+
+tts:
+  type: wyoming
+  uri: tcp://homeassistant.example.lan:10200   # e.g. wyoming-piper
+  voice: en_US-lessac-medium
+
+llm:
+  type: ollama
+  url: http://ollama.example.lan:11434
+  model: llama3.2:3b
+  # Use the same values as every other client of this Ollama server (Home Assistant's agent included);
+  # different ones make Ollama reload the model.
+  options:
+    num_ctx: 8192
+  keep_alive: -1
+  think: false
+
+prompt:
+  preamble_file: home-assistant-preamble.md
+  context: >-
+    Today is {now:%A, %B %d, %Y}. You are the voice assistant in the {area}. Commands that name no room target the
+    {area}. To play music without a room named, use the media player {media_player}.
+
+rooms:
+  office:
+    area: Office
+    media_player: media_player.office_speaker
+  kitchen:
+    area: Kitchen
+    media_player: media_player.kitchen_display

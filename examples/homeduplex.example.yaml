@@ -1,0 +1,75 @@
+# homeduplex settings: every option, with its default where it has one.
+# Check a file with `homeduplex check-config -c <file>`. Any setting can also come from the environment:
+# HOMEDUPLEX_<SECTION>__<KEY>, e.g. HOMEDUPLEX_LLM__API_KEY or HOMEDUPLEX_SERVER__PORT.
+
+server:
+  host: 0.0.0.0
+  port: 8770
+  # Clients pick their room with `?room=<id>` on the endpoint URL. A client that can't do that can connect to a
+  # port of its own instead:
+  extra_ports: {}            # e.g. {8771: office}
+  # api_key: set HOMEDUPLEX_SERVER__API_KEY rather than writing it here; clients then send it as a Bearer token.
+
+# Speech-to-text. `wyoming`: any Wyoming ASR server (faster-whisper, Parakeet, ...).
+# `openai`: any server with POST /audio/transcriptions.
+stt:
+  type: wyoming
+  uri: tcp://stt.example.lan:10300
+  language: en               # omit to let the engine decide
+  sample_rate: 16000         # rate the engine expects; audio is resampled to it
+  timeout_s: 15
+  slots: 1                   # transcriptions at once, across all conversations
+
+# Text-to-speech. `wyoming`: any Wyoming TTS server (Piper, Kokoro, ...).
+# `openai`: any server with POST /audio/speech returning raw PCM.
+tts:
+  type: wyoming
+  uri: tcp://tts.example.lan:10200
+  voice: en_US-lessac-medium # the engine's voice name; omit for its default
+  voice_map: {}              # client voice names (clients often send "marin") to engine voices
+  chunk_timeout_s: 10        # a stalled TTS server costs one sentence, not the conversation
+  slots: 1                   # sentences synthesised at once, across all conversations
+
+# Language model. `openai`: any server with POST /chat/completions (llama.cpp, vLLM, LM Studio, LocalAI, Ollama's
+# /v1, hosted APIs). `ollama`: Ollama's native API, for options its /v1 endpoint ignores (num_ctx, keep_alive, think).
+llm:
+  type: openai
+  url: http://llm.example.lan:8080/v1
+  model: my-model
+  extra_body: {}             # extra request fields, sent as is
+  slots: 1                   # answers generated at once, across all conversations
+  first_token_timeout_s: 30
+  idle_timeout_s: 30
+
+conversation:
+  max_turns: 10              # user turns of history sent to the model; past it, trimmed back to half at once
+  min_silence_ms: 800        # end-of-speech silence never goes below this, whatever the client asks
+  drop_echo_transcripts: true
+
+vad:
+  type: energy               # adaptive noise floor; works well behind the client's echo canceller
+  min_speech_level: 0        # ignore utterances quieter than this ("level max" in the logs); 0: off
+
+# Extra text for the model, all optional. Every answer starts with a system message made of:
+#   preamble                   the same everywhere: house rules, tool advice. Plain text.
+#   the client's instructions  sent by the client.
+#   context                    what depends on the room or the day. A template, filled in for every answer:
+#                              {room} (the room's id), the room's fields under `rooms` (only those every room has)
+#                              and {now:<strftime codes>} for the date.
+# Then the conversation itself. Model servers reuse their work on the part of the prompt that didn't change, so keep
+# the time of day out of `context` (it would change every minute): let the model ask a time tool (Home Assistant's
+# MCP server has GetDateTime). Clients that tell the model where they are (Kiosk Satellite 2026.10.3+) don't need
+# the room in `context`.
+prompt:
+  preamble: ""               # or preamble_file: preamble.md (relative to this file)
+  context: ""                # e.g. "Today is {now:%A, %B %d, %Y}. Play music on {media_player} unless a room is named."
+                             # With a client that names its device (Kiosk Satellite), no room is needed:
+                             # "... play music on the media player of the device you run on unless a room is named."
+  timezone: null             # e.g. Europe/Paris; default: the system's
+
+rooms: {}
+#  office:
+#    area: Office
+#  kitchen:
+#    area: Kitchen
+default_room: null           # room for clients that don't name one
