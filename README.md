@@ -4,8 +4,8 @@ A self-hosted voice server for full-duplex conversations at home. It speaks the 
 from your own speech-to-text, language model and text-to-speech: anything that speaks Wyoming or an
 OpenAI-compatible API (Whisper or Parakeet, Piper or Kokoro, Ollama, llama.cpp, vLLM, ...).
 
-> **Status: early development, not released.** The server works end to end against test backends; it has not yet
-> served a real house. Client-driven turns only (Kiosk Satellite's mode); see [`docs/protocol.md`](docs/protocol.md)
+> **Status: early development (0.1).** It serves real Echo Show kiosks running Kiosk Satellite, with Wyoming speech
+> services and Ollama. Client-driven turns only (Kiosk Satellite's mode); see [`docs/protocol.md`](docs/protocol.md)
 > for what is supported. The design, and the reasons behind it, are in [`docs/design.md`](docs/design.md).
 
 ## Why
