@@ -73,6 +73,7 @@ async def test_server_driven_turns_are_refused_clearly(turn_detection: object, c
         error = (await client.expect("error"))["error"]
         assert error["code"] == code
         assert error["event_id"] == "evt_1"
+        assert "choose the OpenAI provider" in error["message"]  # what a Kiosk Satellite user can act on
         # Nothing was applied.
         session = (await client.update_session({}))["session"]
         assert session["instructions"] == ""

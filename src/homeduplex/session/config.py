@@ -81,6 +81,12 @@ class UnsupportedSetting(ValueError):
 
 _UNSET: Any = object()
 
+# What a user can do about a refused turn-taking mode: they rarely control the protocol, only the client's options.
+_CLIENT_TURNS_HINT = (
+    "Use a client mode where the client decides the turns (server_vad with create_response: false). "
+    "With Kiosk Satellite, choose the OpenAI provider, not xAI Grok."
+)
+
 
 def apply_update(config: SessionConfig, session: Mapping[str, Any], min_silence_ms: int) -> SessionConfig:
     """The config after a `session.update`. Raises UnsupportedSetting for audio formats other than 24 kHz PCM16
@@ -144,7 +150,8 @@ def _turn_detection(raw: Any, min_silence_ms: int) -> TurnDetection:
     if raw is None:
         raise UnsupportedSetting(
             "unsupported_turn_detection",
-            "turn_detection: null (client commits audio itself) is not supported yet; use server_vad",
+            "this client sends turn_detection: null (it commits audio itself), which homeduplex does not support yet. "
+            f"{_CLIENT_TURNS_HINT}",
         )
     td = _mapping(raw)
     detection = TurnDetection(
@@ -156,8 +163,8 @@ def _turn_detection(raw: Any, min_silence_ms: int) -> TurnDetection:
     if detection.create_response:
         raise UnsupportedSetting(
             "unsupported_turn_detection",
-            "server-driven turns (create_response: true) are not supported yet; "
-            "send create_response: false and response.create when the user has finished",
+            "this client wants the server to decide when the user has finished speaking (create_response: true, "
+            f"the OpenAI default), which homeduplex does not support yet. {_CLIENT_TURNS_HINT}",
         )
     return detection
 

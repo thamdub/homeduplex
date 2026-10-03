@@ -55,6 +55,14 @@ Not supported yet, and refused with an `error` event rather than ignored: server
 (`create_response: true`, the OpenAI default when a client sends `turn_detection` without it), `turn_detection: null`,
 and audio formats other than 24 kHz PCM16. Unknown client events are ignored.
 
+Kiosk Satellite's **xAI Grok** provider asks for server-driven turns: it sends `turn_detection` without
+`create_response`, since xAI's server always keeps the turns (and Kiosk mutes its microphone while an answer plays).
+Use its **OpenAI** provider with homeduplex until server-driven turns exist.
+
+"Save & Validate" in Kiosk Satellite opens a session, waits for `session.updated` and disconnects: a connect and an
+immediate disconnect in the log are a successful validation. It never reaches the backends; `homeduplex check-config
+--connect`, and the start-up log, check those.
+
 ## Client behaviour worth knowing
 
 - Interruption is decided on the client: speech over an answer counts as the user only if three ~85 ms microphone

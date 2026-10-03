@@ -50,11 +50,12 @@ for example the Wyoming services and Ollama many Home Assistant users already ru
 git clone https://github.com/thamdub/homeduplex.git && cd homeduplex
 uv sync
 cp examples/wyoming-ollama.yaml homeduplex.yaml     # then edit addresses, model, rooms
-uv run homeduplex check-config                       # validates and prints what it will use
+uv run homeduplex check-config --connect             # validates, and checks each backend answers
 uv run homeduplex serve                              # listens on 0.0.0.0:8770
 ```
 
-Then point the client at it. In Kiosk Satellite, set the realtime endpoint to
+Then point the client at it. In Kiosk Satellite, choose the **OpenAI** realtime provider (not xAI Grok, see
+[`docs/protocol.md`](docs/protocol.md)) and set its endpoint to
 `ws://<server>:8770/v1/realtime?room=office` (the `room` must be one from your settings; leave it out if you have
 no rooms). Any path works; an API key is checked only if `server.api_key` is set.
 
@@ -78,6 +79,8 @@ the other users, or the server may reload the model on every switch.
 
 - **Docker:** `docker run -p 8770:8770 -v ./homeduplex.yaml:/config/homeduplex.yaml:ro ghcr.io/thamdub/homeduplex`
   (or build it: `docker build -t homeduplex .`). For prompt dates, set `prompt.timezone`: the image runs in UTC.
+  Inside a container, `127.0.0.1` is the container itself: give backends the host's address. The log says at
+  start-up whether each backend answers.
 - **Kubernetes:** `helm install homeduplex oci://ghcr.io/thamdub/charts/homeduplex --version <version> -f values.yaml`;
   see [`charts/homeduplex`](charts/homeduplex/README.md).
 - **macOS:** a LaunchAgent example is in [`examples/macos/`](examples/macos/).

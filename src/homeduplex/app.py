@@ -6,6 +6,7 @@ import logging
 import signal
 
 from homeduplex import backends
+from homeduplex.backends.probe import probe_all
 from homeduplex.config import Settings
 from homeduplex.scheduler.fair import FairQueue
 from homeduplex.session.session import Services, Session
@@ -38,6 +39,15 @@ def build_server(settings: Settings, services: Services) -> RealtimeServer:
     return RealtimeServer(settings, new_session)
 
 
+async def report_backends(settings: Settings) -> None:
+    """Log whether each backend answers; a wrong address otherwise shows only when a conversation fails."""
+    for result in await probe_all(settings):
+        if result.ok:
+            log.info("%s", result.line())
+        else:
+            log.warning("%s", result.line())
+
+
 async def run(settings: Settings) -> None:
     """Serve until SIGINT or SIGTERM, then close every connection (which cancels their work)."""
     for warning in settings.warnings():
@@ -45,6 +55,7 @@ async def run(settings: Settings) -> None:
     services = build_services(settings)
     server = build_server(settings, services)
     await server.start(listeners(settings))
+    probes = asyncio.create_task(report_backends(settings), name="backend probes")
     stop = asyncio.Event()
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGINT, signal.SIGTERM):
@@ -54,5 +65,6 @@ async def run(settings: Settings) -> None:
         await stop.wait()
     finally:
         log.info("shutting down")
+        probes.cancel()
         await server.close()
         await close_services(services)

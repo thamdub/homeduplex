@@ -9,6 +9,7 @@ from typing import Literal
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.event import async_read_event, async_write_event
+from wyoming.info import AsrModel, AsrProgram, Attribution, Describe, Info, TtsProgram, TtsVoice
 from wyoming.tts import Synthesize
 
 # answer: normally. hang: never answer. close: hang up without answering. stall (TTS): start, then stop mid-sentence.
@@ -38,6 +39,9 @@ class FakeWyoming:
     voices: list[str | None] = field(default_factory=list)
     connections: int = 0
     disconnects: int = 0
+    # What it says it offers when asked to describe itself.
+    offers: Literal["asr", "tts"] = "asr"
+    voice_names: list[str] = field(default_factory=lambda: ["en_US-test"])
     port: int = 0
 
     @property
@@ -57,7 +61,9 @@ class FakeWyoming:
     async def _serve(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         request = STTRequest()
         while (event := await async_read_event(reader)) is not None:
-            if Transcribe.is_type(event.type):
+            if Describe.is_type(event.type):
+                await async_write_event(self._info().event(), writer)
+            elif Transcribe.is_type(event.type):
                 request.language = Transcribe.from_event(event).language
             elif AudioStart.is_type(event.type):
                 request.rate = AudioStart.from_event(event).rate
@@ -77,6 +83,20 @@ class FakeWyoming:
                     return
                 await self._speak(reader, writer)
                 return
+
+    def _info(self) -> Info:
+        who = Attribution(name="test", url="https://example.lan")
+        if self.offers == "asr":
+            model = AsrModel(name="test-model", attribution=who, installed=True, description=None, version=None,
+                             languages=["en"])  # fmt: skip
+            return Info(asr=[AsrProgram(name="fake-asr", attribution=who, installed=True, description=None,
+                                        version=None, models=[model])])  # fmt: skip
+        voices = [
+            TtsVoice(name=n, attribution=who, installed=True, description=None, version=None, languages=["en"])
+            for n in self.voice_names
+        ]
+        return Info(tts=[TtsProgram(name="fake-tts", attribution=who, installed=True, description=None,
+                                    version=None, voices=voices)])  # fmt: skip
 
     async def _misbehave(self, reader: asyncio.StreamReader) -> bool:
         if self.delay:

@@ -19,6 +19,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     serve.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     check = commands.add_parser("check-config", help="validate the settings file and print a summary")
     check.add_argument("-c", "--config", help=config_help)
+    check.add_argument(
+        "--connect", action="store_true", help="also check that each backend answers (exit code 2 if one doesn't)"
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -31,6 +34,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(summary(settings))
         for warning in settings.warnings():
             print(f"warning: {warning}", file=sys.stderr)
+        if args.connect:
+            from homeduplex.backends.probe import probe_all
+
+            results = asyncio.run(probe_all(settings))
+            for result in results:
+                print(result.line())
+            return 0 if all(r.ok for r in results) else 2
         return 0
 
     from homeduplex.app import run

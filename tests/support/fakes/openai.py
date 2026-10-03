@@ -28,6 +28,9 @@ class FakeOpenAI:
     piece_delay: float = 0.0
     error_status: int = 500
     speech_rate: int = 24000
+    # Models Ollama's /api/tags lists; a key the server requires (None: any).
+    ollama_models: list[str] = field(default_factory=lambda: ["m:latest"])
+    required_key: str | None = None
     speech_chunks: int = 3
     speech_chunk_ms: int = 100
     # Recorded requests.
@@ -67,6 +70,16 @@ class FakeOpenAI:
         except (asyncio.CancelledError, ConnectionResetError):
             self.cancelled += 1
             raise
+
+    async def models(self, request: web.Request) -> web.StreamResponse:
+        if self.required_key and request.headers.get("Authorization") != f"Bearer {self.required_key}":
+            return web.json_response({"error": "bad key"}, status=401)
+        if self.behaviour == "error":
+            return web.Response(status=self.error_status)
+        return web.json_response({"object": "list", "data": [{"id": "m", "object": "model"}]})
+
+    async def tags(self, request: web.Request) -> web.StreamResponse:
+        return web.json_response({"models": [{"name": n} for n in self.ollama_models]})
 
     async def transcribe(self, request: web.Request) -> web.StreamResponse:
         self.authorization.append(request.headers.get("Authorization"))
@@ -197,6 +210,8 @@ async def fake_openai(**kwargs: Any) -> AsyncIterator[FakeOpenAI]:
     app.router.add_post("/v1/chat/completions", fake.chat)
     app.router.add_post("/v1/audio/speech", fake.speech)
     app.router.add_post("/api/chat", fake.ollama_chat)
+    app.router.add_get("/v1/models", fake.models)
+    app.router.add_get("/api/tags", fake.tags)
     runner = web.AppRunner(app, handler_cancellation=True)
     await runner.setup()
     site = web.TCPSite(runner, "127.0.0.1", 0)
