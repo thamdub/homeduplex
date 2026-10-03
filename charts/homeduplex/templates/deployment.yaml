@@ -24,6 +24,9 @@ spec:
         {{- end }}
     spec:
       automountServiceAccountToken: false
+      # Kubernetes would otherwise inject HOMEDUPLEX_SERVICE_HOST, HOMEDUPLEX_PORT, ... (service links), which share
+      # homeduplex's settings prefix.
+      enableServiceLinks: false
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

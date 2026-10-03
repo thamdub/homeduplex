@@ -1,8 +1,8 @@
 """Load settings from a YAML file, with environment variables on top.
 
 `HOMEDUPLEX_<SECTION>__<KEY>=value` sets `section.key` (any depth, case-insensitive), for secrets and container
-deployments: `HOMEDUPLEX_LLM__API_KEY=…`, `HOMEDUPLEX_SERVER__PORT=8780`. Values are strings; the schema converts
-them.
+deployments: `HOMEDUPLEX_LLM__API_KEY=…`, `HOMEDUPLEX_SERVER__PORT=8780`; `HOMEDUPLEX_DEFAULT_ROOM` sets a top-level
+setting. Other single-word variables with the prefix are ignored. Values are strings; the schema converts them.
 """
 
 import os
@@ -69,6 +69,10 @@ def _apply_env(data: dict[str, Any], environ: Mapping[str, str]) -> None:
             continue
         keys = name[len(ENV_PREFIX) :].lower().split("__")
         if not all(keys):
+            continue
+        # A single word is only a setting if it names one (HOMEDUPLEX_DEFAULT_ROOM). Kubernetes injects
+        # HOMEDUPLEX_SERVICE_HOST, HOMEDUPLEX_PORT, ... for a Service named homeduplex: same prefix, not settings.
+        if len(keys) == 1 and keys[0] not in Settings.model_fields:
             continue
         node = data
         for key in keys[:-1]:

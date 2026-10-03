@@ -66,6 +66,7 @@ def test_secure_defaults() -> None:
     [container] = pod["containers"]
     assert pod["securityContext"]["runAsNonRoot"] is True
     assert pod["automountServiceAccountToken"] is False
+    assert pod["enableServiceLinks"] is False
     assert container["securityContext"]["readOnlyRootFilesystem"] is True
     assert container["readinessProbe"]["httpGet"]["path"] == "/healthz"
     assert not any(d["kind"] == "Ingress" for d in docs)

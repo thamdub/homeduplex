@@ -220,3 +220,29 @@ def test_settings_are_immutable(tmp_path: Path) -> None:
     settings: Settings = load(write(tmp_path, MINIMAL), {})
     with pytest.raises(ValueError, match="frozen"):
         settings.server.port = 1
+
+
+def test_kubernetes_service_variables_are_ignored(tmp_path: Path) -> None:
+    """A Service named `homeduplex` makes Kubernetes inject HOMEDUPLEX_SERVICE_HOST, HOMEDUPLEX_PORT, ... into pods;
+    they share the settings prefix but are not settings (0.1.0 refused to start on them)."""
+    env = {
+        "HOMEDUPLEX_SERVICE_HOST": "10.43.0.10",
+        "HOMEDUPLEX_SERVICE_PORT": "8770",
+        "HOMEDUPLEX_SERVICE_PORT_REALTIME": "8770",
+        "HOMEDUPLEX_PORT": "tcp://10.43.0.10:8770",
+        "HOMEDUPLEX_PORT_8770_TCP": "tcp://10.43.0.10:8770",
+        "HOMEDUPLEX_PORT_8770_TCP_ADDR": "10.43.0.10",
+        "HOMEDUPLEX_PORT_8770_TCP_PORT": "8770",
+        "HOMEDUPLEX_PORT_8770_TCP_PROTO": "tcp",
+    }
+    settings = load(write(tmp_path, MINIMAL), env)
+    assert settings.server.port == 8770
+
+
+def test_top_level_settings_from_env(tmp_path: Path) -> None:
+    text = MINIMAL + "rooms: {office: {}}\n"
+    assert load(write(tmp_path, text), {"HOMEDUPLEX_DEFAULT_ROOM": "office"}).default_room == "office"
+
+
+def test_misspelled_section_from_env_is_still_reported(tmp_path: Path) -> None:
+    assert problems(write(tmp_path, MINIMAL), {"HOMEDUPLEX_SERVR__PORT": "1"}) == ["servr: unknown setting"]
